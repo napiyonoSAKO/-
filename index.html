@@ -8,8 +8,6 @@
         body { font-family: sans-serif; margin: 0; background: #f0f2f5; color: #333; }
         .header { background: #4a90e2; color: white; text-align: center; padding: 15px; position: sticky; top: 0; z-index: 100; }
         .content { padding: 20px; padding-bottom: 80px; min-height: 100vh; }
-        
-        /* 下部のタブメニュー */
         .tab-bar {
             position: fixed; bottom: 0; width: 100%; height: 60px;
             background: white; display: flex; justify-content: space-around;
@@ -17,12 +15,8 @@
         }
         .tab-item { border: none; background: none; font-size: 12px; color: #666; cursor: pointer; flex: 1; }
         .tab-item.active { color: #4a90e2; font-weight: bold; }
-        
-        /* セクションの切り替え */
         section { display: none; }
         section.active { display: block; }
-
-        /* リストの見た目 */
         .item-card {
             background: white; margin-bottom: 10px; padding: 12px; 
             border-radius: 8px; display: flex; justify-content: space-between; 
@@ -46,6 +40,25 @@
         <ul id="todo-list" style="list-style: none; padding: 0;"></ul>
     </section>
 
+    <section id="book">
+        <div id="book-stats" style="background: #4a90e2; color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="font-size: 0.8rem; opacity: 0.9; margin-bottom: 5px;">2026年の読書記録</div>
+            <div style="font-size: 1.8rem; font-weight: bold; margin-bottom: 10px;" id="total-books-count">0 冊</div>
+            <div id="genre-breakdown" style="font-size: 0.75rem; display: flex; flex-wrap: wrap; gap: 8px; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 10px;">
+                </div>
+        </div>
+
+        <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <input type="text" id="book-title" placeholder="本のタイトル" style="width: 90%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                <input type="number" id="book-pages" placeholder="全ページ数" style="width: 50%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                <input type="text" id="book-category" placeholder="ジャンル" style="width: 50%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+            <button onclick="addBook()" style="width: 100%; padding: 10px; background: #4a90e2; color: white; border: none; border-radius: 5px; font-weight: bold;">本を登録する</button>
+        </div>
+        <ul id="book-list" style="list-style: none; padding: 0;"></ul>
+    </section>
+
     <section id="timer">
         <div style="text-align: center; background: white; padding: 40px 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
             <div style="font-size: 4rem; font-weight: bold; margin-bottom: 10px;" id="timer-display">25:00</div>
@@ -55,7 +68,6 @@
     </section>
 
     <section id="habit"><h2>✨ 習慣リスト</h2><p>開発中...</p></section>
-    <section id="book"><h2>📚 読書リスト</h2><p>開発中...</p></section>
     <section id="memo"><h2>📓 メモ</h2><p>開発中...</p></section>
 </div>
 
@@ -73,7 +85,6 @@
     let isRunning = false;
     let currentTask = "";
 
-    // ページ切り替え機能
     function showPage(pageId, titleText) {
         document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
@@ -82,13 +93,15 @@
         document.getElementById('title').innerText = titleText;
     }
 
-    // アプリ起動時にデータを読み込む
     window.onload = function() {
+        // Todo読み込み
         const savedTodos = JSON.parse(localStorage.getItem('myTodos')) || [];
         savedTodos.forEach(text => createTodoElement(text));
+        // 読書リスト読み込み
+        renderBooks();
     };
 
-    // Todo追加
+    // --- Todo機能 ---
     function addTodo() {
         const input = document.getElementById('todo-input');
         if (input.value.trim() === "") return;
@@ -97,17 +110,10 @@
         input.value = "";
     }
 
-    // リストの要素を作る
     function createTodoElement(text) {
         const li = document.createElement('li');
         li.className = "item-card";
-        li.innerHTML = `
-            <span>${text}</span>
-            <div>
-                <button onclick="goToTimer('${text}')" style="background: #4a90e2; color: white; padding: 5px 10px; margin-right:5px;">集中</button>
-                <button onclick="deleteTodo(this)" style="background: #eee; color: #666; padding: 5px 10px;">消す</button>
-            </div>
-        `;
+        li.innerHTML = `<span>${text}</span><div><button onclick="goToTimer('${text}')" style="background:#4a90e2;color:white;padding:5px 10px;margin-right:5px;">集中</button><button onclick="deleteTodo(this)" style="background:#eee;color:#666;padding:5px 10px;">消す</button></div>`;
         document.getElementById('todo-list').appendChild(li);
     }
 
@@ -122,14 +128,99 @@
         saveTodos();
     }
 
-    // タイマー連動
+    // --- 読書リスト機能（統計機能付き！） ---
+    function addBook() {
+        const title = document.getElementById('book-title').value;
+        const totalPages = document.getElementById('book-pages').value;
+        const category = document.getElementById('book-category').value || "未分類";
+
+        if (!title || !totalPages) return;
+
+        const book = { 
+            title, 
+            totalPages: parseInt(totalPages), 
+            currentPage: 0, 
+            category,
+            addedDate: new Date().toLocaleDateString()
+        };
+
+        const books = JSON.parse(localStorage.getItem('myBooks')) || [];
+        books.push(book);
+        localStorage.setItem('myBooks', JSON.stringify(books));
+        renderBooks();
+
+        document.getElementById('book-title').value = "";
+        document.getElementById('book-pages').value = "";
+        document.getElementById('book-category').value = "";
+    }
+
+    function renderBooks() {
+        const books = JSON.parse(localStorage.getItem('myBooks')) || [];
+        const list = document.getElementById('book-list');
+        list.innerHTML = "";
+
+        let totalFinished = 0;
+        const genreCounts = {};
+
+        books.forEach((book, index) => {
+            const percent = Math.floor((book.currentPage / book.totalPages) * 100);
+            if (percent === 100) {
+                totalFinished++;
+                genreCounts[book.category] = (genreCounts[book.category] || 0) + 1;
+            }
+
+            const li = document.createElement('li');
+            li.className = "item-card";
+            li.style.flexDirection = "column";
+            li.style.alignItems = "flex-start";
+            li.innerHTML = `
+                <div style="width:100%; display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span style="font-size:0.7rem; color:#888;">${book.category} | ${book.addedDate}</span>
+                    <button onclick="deleteBook(${index})" style="background:none; color:#ccc;">✕</button>
+                </div>
+                <div style="font-weight:bold;">${book.title}</div>
+                <div style="width:100%; background:#eee; height:8px; border-radius:4px; margin:10px 0 5px 0;">
+                    <div style="background:${percent === 100 ? '#2ecc71' : '#4a90e2'}; width:${percent}%; height:100%; border-radius:4px;"></div>
+                </div>
+                <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.7rem;">${percent}% (${book.currentPage}/${book.totalPages}p)</span>
+                    <button onclick="updatePage(${index})" style="background:#f0f2f5; padding:4px 10px; border-radius:15px; font-size:0.7rem;">更新</button>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+
+        document.getElementById('total-books-count').innerText = `${totalFinished} 冊`;
+        const genreContainer = document.getElementById('genre-breakdown');
+        genreContainer.innerHTML = "";
+        for (const [genre, count] of Object.entries(genreCounts)) {
+            const span = document.createElement('span');
+            span.innerHTML = `🏷️ ${genre}: <strong>${count}</strong>`;
+            genreContainer.appendChild(span);
+        }
+    }
+
+    function updatePage(index) {
+        const newPage = prompt("今何ページまで読みましたか？");
+        if (newPage === null) return;
+        const books = JSON.parse(localStorage.getItem('myBooks'));
+        books[index].currentPage = parseInt(newPage);
+        localStorage.setItem('myBooks', JSON.stringify(books));
+        renderBooks();
+    }
+
+    function deleteBook(index) {
+        const books = JSON.parse(localStorage.getItem('myBooks'));
+        books.splice(index, 1);
+        localStorage.setItem('myBooks', JSON.stringify(books));
+        renderBooks();
+    }
+
+    // --- タイマー機能 ---
     function goToTimer(task) {
         currentTask = task;
         document.getElementById('current-task-display').innerText = "実行中: " + currentTask;
         showPage('timer', 'タイマー');
-        // タイマーのタブボタンも光らせるための処理
-        document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-item')[3].classList.add('active');
     }
 
     function toggleTimer() {
@@ -149,7 +240,7 @@
     function updateTimer() {
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
-            alert("お疲れ様！「" + currentTask + "」の時間が終わりました。");
+            alert("終了！");
             return;
         }
         timeLeft--;
