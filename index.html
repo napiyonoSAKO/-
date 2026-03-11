@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>学習支援アプリ</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background: #f0f2f5; color: #333; }
+        .header { background: #4a90e2; color: white; text-align: center; padding: 15px; position: sticky; top: 0; z-index: 100; }
+        .content { padding: 20px; padding-bottom: 80px; min-height: 100vh; }
+        
+        /* 下部のタブメニュー */
+        .tab-bar {
+            position: fixed; bottom: 0; width: 100%; height: 60px;
+            background: white; display: flex; justify-content: space-around;
+            align-items: center; border-top: 1px solid #ddd;
+        }
+        .tab-item { border: none; background: none; font-size: 12px; color: #666; cursor: pointer; flex: 1; }
+        .tab-item.active { color: #4a90e2; font-weight: bold; }
+        
+        /* セクションの切り替え */
+        section { display: none; }
+        section.active { display: block; }
+
+        /* リストの見た目 */
+        .item-card {
+            background: white; margin-bottom: 10px; padding: 12px; 
+            border-radius: 8px; display: flex; justify-content: space-between; 
+            align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        button { cursor: pointer; border-radius: 5px; border: none; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1 id="title" style="margin:0; font-size: 1.2rem;">Todo</h1>
+</div>
+
+<div class="content">
+    <section id="todo" class="active">
+        <div style="margin-bottom: 20px; display: flex; gap: 5px;">
+            <input type="text" id="todo-input" placeholder="何を勉強する？" style="padding: 10px; flex: 1; border: 1px solid #ddd; border-radius: 5px;">
+            <button onclick="addTodo()" style="padding: 10px 20px; background: #4a90e2; color: white;">追加</button>
+        </div>
+        <ul id="todo-list" style="list-style: none; padding: 0;"></ul>
+    </section>
+
+    <section id="timer">
+        <div style="text-align: center; background: white; padding: 40px 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <div style="font-size: 4rem; font-weight: bold; margin-bottom: 10px;" id="timer-display">25:00</div>
+            <p id="current-task-display" style="color: #888; margin-bottom: 30px;">タスクを選んでください</p>
+            <button onclick="toggleTimer()" id="timer-button" style="padding: 15px 40px; font-size: 1.2rem; background: #28a745; color: white; width: 100%;">スタート</button>
+        </div>
+    </section>
+
+    <section id="habit"><h2>✨ 習慣リスト</h2><p>開発中...</p></section>
+    <section id="book"><h2>📚 読書リスト</h2><p>開発中...</p></section>
+    <section id="memo"><h2>📓 メモ</h2><p>開発中...</p></section>
+</div>
+
+<nav class="tab-bar">
+    <button class="tab-item active" onclick="showPage('todo', 'Todo')">📝<br>Todo</button>
+    <button class="tab-item" onclick="showPage('habit', '習慣')">✨<br>習慣</button>
+    <button class="tab-item" onclick="showPage('book', '読書')">📚<br>読書</button>
+    <button class="tab-item" onclick="showPage('timer', 'タイマー')">⏱<br>タイマー</button>
+    <button class="tab-item" onclick="showPage('memo', 'メモ')">📓<br>メモ</button>
+</nav>
+
+<script>
+    let timerInterval;
+    let timeLeft = 25 * 60;
+    let isRunning = false;
+    let currentTask = "";
+
+    // ページ切り替え機能
+    function showPage(pageId, titleText) {
+        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        event.currentTarget.classList.add('active');
+        document.getElementById('title').innerText = titleText;
+    }
+
+    // アプリ起動時にデータを読み込む
+    window.onload = function() {
+        const savedTodos = JSON.parse(localStorage.getItem('myTodos')) || [];
+        savedTodos.forEach(text => createTodoElement(text));
+    };
+
+    // Todo追加
+    function addTodo() {
+        const input = document.getElementById('todo-input');
+        if (input.value.trim() === "") return;
+        createTodoElement(input.value);
+        saveTodos();
+        input.value = "";
+    }
+
+    // リストの要素を作る
+    function createTodoElement(text) {
+        const li = document.createElement('li');
+        li.className = "item-card";
+        li.innerHTML = `
+            <span>${text}</span>
+            <div>
+                <button onclick="goToTimer('${text}')" style="background: #4a90e2; color: white; padding: 5px 10px; margin-right:5px;">集中</button>
+                <button onclick="deleteTodo(this)" style="background: #eee; color: #666; padding: 5px 10px;">消す</button>
+            </div>
+        `;
+        document.getElementById('todo-list').appendChild(li);
+    }
+
+    function saveTodos() {
+        const todos = [];
+        document.querySelectorAll('#todo-list li span').forEach(span => todos.push(span.innerText));
+        localStorage.setItem('myTodos', JSON.stringify(todos));
+    }
+
+    function deleteTodo(btn) {
+        btn.parentElement.parentElement.remove();
+        saveTodos();
+    }
+
+    // タイマー連動
+    function goToTimer(task) {
+        currentTask = task;
+        document.getElementById('current-task-display').innerText = "実行中: " + currentTask;
+        showPage('timer', 'タイマー');
+        // タイマーのタブボタンも光らせるための処理
+        document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-item')[3].classList.add('active');
+    }
+
+    function toggleTimer() {
+        const btn = document.getElementById('timer-button');
+        if (isRunning) {
+            clearInterval(timerInterval);
+            btn.innerText = "スタート";
+            btn.style.background = "#28a745";
+        } else {
+            timerInterval = setInterval(updateTimer, 1000);
+            btn.innerText = "一時停止";
+            btn.style.background = "#dc3545";
+        }
+        isRunning = !isRunning;
+    }
+
+    function updateTimer() {
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert("お疲れ様！「" + currentTask + "」の時間が終わりました。");
+            return;
+        }
+        timeLeft--;
+        const m = Math.floor(timeLeft / 60);
+        const s = timeLeft % 60;
+        document.getElementById('timer-display').innerText = `${m}:${s.toString().padStart(2, '0')}`;
+    }
+</script>
+
+</body>
+</html>
