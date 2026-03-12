@@ -16,43 +16,37 @@
         .item-card { background: white; margin-bottom: 10px; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         button { cursor: pointer; border-radius: 5px; border: none; }
         
-        /* お部屋エリア */
         #room { background: #ffffff; border: 4px solid #fce4bd; border-radius: 20px; height: 300px; position: relative; overflow: hidden; margin-bottom: 15px; }
         .floor { position: absolute; bottom: 0; width: 100%; height: 20px; background: #f0f0f0; }
-        #room-char { position: absolute; bottom: 25px; left: 50%; font-size: 5rem; transition: left 3s ease-in-out, transform 0.2s; user-select: none; }
+        #room-char { position: absolute; bottom: 25px; left: 50%; font-size: 5rem; transition: left 3s ease-in-out, transform 0.2s; user-select: none; z-index: 5; }
         .jump { transform: translateY(-30px); }
         .room-bubble { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: white; padding: 8px 15px; border-radius: 20px; border: 2px solid #ffb347; font-size: 0.8rem; opacity: 0; transition: opacity 0.5s, left 3s ease-in-out; max-width: 80%; text-align: center; z-index: 10; }
         
         .talk-form { display: flex; gap: 5px; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 10px; }
-        
-        /* コトバ一覧のスタイル */
         .memory-list-container { background: white; border-radius: 15px; padding: 15px; margin-top: 20px; border: 1px solid #eee; }
-        .memory-item { font-size: 0.85rem; padding: 8px; border-bottom: 1px solid #f9f9f9; display: flex; justify-content: space-between; align-items: center; }
-        .memory-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1 id="title" style="margin:0; font-size: 1.2rem;">お部屋</h1>
+    <h1 id="title">お部屋</h1>
 </div>
 
 <div class="content">
     <section id="room" class="active">
-        <div class="room-bubble" id="room-talk">呼んだ？</div>
+        <div class="room-bubble" id="room-talk">...</div>
         <div id="room-char">🥚</div>
         <div class="floor"></div>
     </section>
     
-    <div id="talk-area" style="display: none; margin-bottom: 20px;">
+    <div id="talk-area" style="display: block; margin-bottom: 20px;">
         <div class="talk-form">
             <input type="text" id="user-msg" placeholder="キャラにお喋り..." style="flex:1; padding:10px; border:1px solid #ddd; border-radius:5px;">
             <button onclick="talkToChar()" style="background:#ffb347; color:white; padding:10px 15px;">送信</button>
         </div>
         <button onclick="teachWord()" style="width:100%; padding:10px; background:#fff; border:2px dashed #ffb347; color:#ffb347; font-weight:bold; border-radius:10px; margin-bottom: 20px;">📖 好きな言葉を教える</button>
-        
         <div class="memory-list-container">
-            <h3 style="margin-top:0; font-size: 0.9rem; color: #ffb347;">📖 覚えたコトバ一覧</h3>
+            <h3 style="margin:0; font-size: 0.9rem; color: #ffb347;">📖 覚えたコトバ一覧</h3>
             <div id="memory-list-content"></div>
         </div>
     </div>
@@ -64,18 +58,15 @@
             <div style="font-size: 2rem; font-weight: bold; color: #e67e22;" id="total-score">0</div>
         </div>
         <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-            <input type="text" id="habit-name" placeholder="例：読書、お菓子我慢" style="width: 90%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom:10px;">
-            <div style="display: flex; gap: 10px;">
-                <button onclick="addHabit(10)" style="flex:1; padding: 10px; background: #2ecc71; color: white;">良い習慣(＋)</button>
-                <button onclick="addHabit(-10)" style="flex:1; padding: 10px; background: #e74c3c; color: white;">悪い習慣(－)</button>
-            </div>
+            <input type="text" id="habit-name" placeholder="習慣名" style="width: 90%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom:10px;">
+            <button onclick="addHabit(10)" style="width:48%; padding: 10px; background: #2ecc71; color: white;">＋</button>
+            <button onclick="addHabit(-10)" style="width:48%; padding: 10px; background: #e74c3c; color: white;">ー</button>
         </div>
         <ul id="habit-list" style="list-style: none; padding: 0;"></ul>
     </section>
 
-    <section id="todo"><div style="margin-bottom:20px;display:flex;gap:5px;"><input type="text" id="todo-input" placeholder="勉強内容" style="padding:10px;flex:1;border:1px solid #ddd;border-radius:5px;"><button onclick="addTodo()" style="padding:10px 20px;background:#ffb347;color:white;">追加</button></div><ul id="todo-list" style="list-style:none;padding:0;"></ul></section>
-    <section id="book"><div id="book-stats" style="background:#ffb347;color:white;padding:15px;border-radius:12px;margin-bottom:20px;"><div style="font-size:1.8rem;font-weight:bold;" id="total-books-count">0 冊</div></div><ul id="book-list" style="list-style:none;padding:0;"></ul></section>
-    <section id="timer"><div style="text-align:center;background:white;padding:40px 20px;border-radius:15px;"><div style="font-size:4rem;font-weight:bold;" id="timer-display">25:00</div><button onclick="toggleTimer()" style="padding:15px 40px;background:#28a745;color:white;width:100%;">スタート</button></div></section>
+    <section id="todo"><ul id="todo-list" style="list-style:none;padding:0;"></ul></section>
+    <section id="book"><div id="book-stats" style="background:#ffb347;color:white;padding:15px;border-radius:12px;" id="total-books-count">0 冊</div></section>
 </div>
 
 <nav class="tab-bar">
@@ -83,132 +74,112 @@
     <button class="tab-item" onclick="showPage('habit', '習慣')">✨<br>習慣</button>
     <button class="tab-item active" onclick="showPage('room', 'お部屋')">🏠<br>お部屋</button>
     <button class="tab-item" onclick="showPage('book', '読書')">📚<br>読書</button>
-    <button class="tab-item" onclick="showPage('timer', 'タイマー')">⏱<br>タイマー</button>
 </nav>
 
 <script>
-    let timerInterval; let timeLeft = 25 * 60; let isRunning = false;
+    // 安全にデータを取得する関数
+    function getStorage(key, defaultVal) {
+        const val = localStorage.getItem(key);
+        if (!val) return defaultVal;
+        try { return JSON.parse(val); } catch(e) { return defaultVal; }
+    }
 
     window.onload = function() {
-        // データの初期化（壊れたデータが入っていたときのため）
-        if (!localStorage.getItem('myTotalScore')) localStorage.setItem('myTotalScore', '0');
-        if (!localStorage.getItem('charMemory')) localStorage.setItem('charMemory', JSON.stringify([]));
-
-        // 画面の表示
+        console.log("App Started");
         renderHabits();
-        renderBooks();
-        loadTodos();
         renderMemoryList();
-        
-        // キャラクターの移動を開始
+        // 4秒ごとに移動
         setInterval(autoMoveAndTalk, 4000);
-        
-        // 最初の表示を「お部屋」に固定
+        // 初期ページ設定
         showPage('room', 'お部屋');
-    };
     };
 
     function showPage(pageId, titleText) {
         document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        event.currentTarget.classList.add('active');
+        const target = document.getElementById(pageId);
+        if(target) target.classList.add('active');
+        
         document.getElementById('title').innerText = titleText;
         document.getElementById('talk-area').style.display = (pageId === 'room') ? 'block' : 'none';
-        if(pageId === 'room') renderMemoryList();
+        
+        const tabs = document.querySelectorAll('.tab-item');
+        tabs.forEach(t => { if(t.innerText.includes(titleText)) t.classList.add('active'); });
     }
 
-    // コトバ一覧の表示
-    function renderMemoryList() {
-        const memory = JSON.parse(localStorage.getItem('charMemory')) || [];
-        const container = document.getElementById('memory-list-content');
-        if(memory.length === 0) {
-            container.innerHTML = "<p style='font-size:0.75rem; color:#aaa;'>まだ教えてもらった言葉がないよ</p>";
-            return;
+    function autoMoveAndTalk() {
+        const char = document.getElementById('room-char');
+        const talk = document.getElementById('room-talk');
+        if (!char || !talk) return;
+
+        const randomX = Math.floor(Math.random() * 60) + 20;
+        char.style.left = randomX + "%";
+        talk.style.left = randomX + "%";
+
+        if (Math.random() > 0.5) {
+            const memory = getStorage('charMemory', []);
+            const defaultMsgs = ["のんびり〜", "お腹すいたな", "頑張ってるね！"];
+            const allMsgs = [...defaultMsgs, ...memory];
+            talk.innerText = allMsgs[Math.floor(Math.random() * allMsgs.length)];
+            talk.style.opacity = 1;
+            setTimeout(() => { talk.style.opacity = 0; }, 2500);
         }
+    }
+
+    function teachWord() {
+        const word = prompt("どんな言葉を教えますか？");
+        if (!word) return;
+        const memory = getStorage('charMemory', []);
+        memory.push(word);
+        localStorage.setItem('charMemory', JSON.stringify(memory));
+        renderMemoryList();
+        alert("覚えたよ！");
+    }
+
+    function renderMemoryList() {
+        const memory = getStorage('charMemory', []);
+        const container = document.getElementById('memory-list-content');
+        if(!container) return;
         container.innerHTML = memory.map((word, i) => `
-            <div class="memory-item">
-                <span>「${word}」</span>
-                <button onclick="forgetWord(${i})" style="background:none; color:#ccc; font-size:0.7rem;">削除</button>
+            <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee; font-size:0.8rem;">
+                <span>${word}</span>
+                <button onclick="forgetWord(${i})" style="color:#ccc;">✕</button>
             </div>
         `).join('');
     }
 
-    function teachWord() {
-        const word = prompt("どんな素敵な言葉を教えますか？");
-        if (!word) return;
-        const memory = JSON.parse(localStorage.getItem('charMemory')) || [];
-        memory.push(word);
-        localStorage.setItem('charMemory', JSON.stringify(memory));
-        renderMemoryList();
-        
-        const talk = document.getElementById('room-talk');
-        talk.innerText = "「" + word + "」だね。覚えたよ！";
-        talk.style.opacity = 1;
-        setTimeout(() => { talk.style.opacity = 0; }, 3000);
-    }
-
-    function forgetWord(index) {
-        const memory = JSON.parse(localStorage.getItem('charMemory'));
-        memory.splice(index, 1);
+    function forgetWord(i) {
+        const memory = getStorage('charMemory', []);
+        memory.splice(i, 1);
         localStorage.setItem('charMemory', JSON.stringify(memory));
         renderMemoryList();
     }
 
     function talkToChar() {
         const input = document.getElementById('user-msg');
-        const msg = input.value; if(!msg) return;
-        const char = document.getElementById('room-char');
         const talk = document.getElementById('room-talk');
-        char.classList.add('jump'); setTimeout(() => char.classList.remove('jump'), 300);
-        
-        let reply = "なになに？";
-        if(msg.includes("疲れた")) reply = "お疲れ様！ゆっくり休んでね";
-        else if(msg.includes("頑張った")) reply = "えらい！すごいよ！";
-        else if(msg.includes("お腹すいた")) reply = "私も！何か食べたいな〜";
-        else reply = "うんうん、わかるよ！";
-
-        talk.innerText = reply; talk.style.opacity = 1;
-        setTimeout(() => { talk.style.opacity = 0; }, 3000);
+        if(!input.value) return;
+        talk.innerText = input.value + "？ なるほど！";
+        talk.style.opacity = 1;
         input.value = "";
+        setTimeout(() => { talk.style.opacity = 0; }, 3000);
     }
 
-    function autoMoveAndTalk() {
-        const char = document.getElementById('room-char');
-        const talk = document.getElementById('room-talk');
-        if(!char || !talk) return;
-        const randomX = Math.floor(Math.random() * 70) + 10;
-        char.style.left = randomX + "%"; talk.style.left = randomX + "%";
-
-        if (Math.random() > 0.6) {
-            const memory = JSON.parse(localStorage.getItem('charMemory')) || [];
-            const defaultMsgs = ["のんびり〜", "お腹すいたな", "頑張ってるね！"];
-            const allMsgs = [...defaultMsgs, ...memory];
-            talk.innerText = allMsgs[Math.floor(Math.random() * allMsgs.length)];
-            talk.style.opacity = 1;
-            setTimeout(() => { if(talk) talk.style.opacity = 0; }, 2500);
-        }
-    }
-
-    // ポイント＆キャラ更新共通
-    function updateScore(v) {
-        let s = parseInt(localStorage.getItem('myTotalScore')) || 0;
-        s += v; localStorage.setItem('myTotalScore', s); renderHabits();
-    }
     function renderHabits() {
-        const h = JSON.parse(localStorage.getItem('myHabitSystem')) || [];
         const s = parseInt(localStorage.getItem('myTotalScore')) || 0;
-        const list = document.getElementById('habit-list'); list.innerHTML = "";
-        h.forEach((x, i) => {
-            const li = document.createElement('li'); li.className = "item-card";
-            li.innerHTML = `<span>${x.name} (${x.point})</span><button onclick="updateScore(${x.point})" style="background:${x.point>0?'#2ecc71':'#e74c3c'};color:white;padding:8px;">実行</button>`;
-            list.appendChild(li);
-        });
-        document.getElementById('total-score').innerText = s; updateCharacter(s);
+        document.getElementById('total-score').innerText = s;
+        const em = s >= 1000 ? "🍱" : s >= 500 ? "🍛" : s >= 100 ? "🍙" : "🥚";
+        document.getElementById('char-emoji').innerText = em;
+        document.getElementById('room-char').innerText = em;
+        document.getElementById('rank-display').innerText = "ランク: " + (s >= 1000 ? "特上" : s >= 500 ? "満足" : s >= 100 ? "ほかほか" : "たまご");
     }
-    function updateCharacter(s) {
-        const e = document.getElementById('char-emoji'); const re = document.getElementById('room-char');
-        let em = "🥚"; if (s >= 1000) em = "🍱"; else if (s >= 500) em = "🍛"; else if (s >= 100) em = "🍙";
-        if(e) e.innerText = em; if(re) re.innerText = em;
+
+    function addHabit(p) {
+        let s = parseInt(localStorage.getItem('myTotalScore')) || 0;
+        s += p;
+        localStorage.setItem('myTotalScore', s);
+        renderHabits();
     }
-    function addHabit(p){const n=document.getElementById('habit-
+</script>
+</body>
+</html>
