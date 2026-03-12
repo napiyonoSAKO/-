@@ -90,9 +90,22 @@
     let timerInterval; let timeLeft = 25 * 60; let isRunning = false;
 
     window.onload = function() {
-        renderHabits(); renderBooks(); loadTodos(); renderMemoryList();
+        // データの初期化（壊れたデータが入っていたときのため）
+        if (!localStorage.getItem('myTotalScore')) localStorage.setItem('myTotalScore', '0');
+        if (!localStorage.getItem('charMemory')) localStorage.setItem('charMemory', JSON.stringify([]));
+
+        // 画面の表示
+        renderHabits();
+        renderBooks();
+        loadTodos();
+        renderMemoryList();
+        
+        // キャラクターの移動を開始
         setInterval(autoMoveAndTalk, 4000);
+        
+        // 最初の表示を「お部屋」に固定
         showPage('room', 'お部屋');
+    };
     };
 
     function showPage(pageId, titleText) {
