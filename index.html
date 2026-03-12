@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>もぐもぐ育成アプリ</title>
+    <title>もぐもぐライフ</title>
     <style>
         body { font-family: sans-serif; margin: 0; background: #fff9f0; color: #333; overflow-x: hidden; }
         .header { background: #ffb347; color: white; text-align: center; padding: 15px; position: sticky; top: 0; z-index: 100; }
@@ -15,170 +15,229 @@
         section.active { display: block; }
         .item-card { background: white; margin-bottom: 10px; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         button { cursor: pointer; border-radius: 5px; border: none; }
-        
+
+        /* 🏠 お部屋 & 吹き出し */
         #room { background: #ffffff; border: 4px solid #fce4bd; border-radius: 20px; height: 300px; position: relative; overflow: hidden; margin-bottom: 15px; }
-        .floor { position: absolute; bottom: 0; width: 100%; height: 20px; background: #f0f0f0; }
-        #room-char { position: absolute; bottom: 25px; left: 50%; font-size: 5rem; transition: left 3s ease-in-out, transform 0.2s; user-select: none; z-index: 5; }
-        .jump { transform: translateY(-30px); }
-        .room-bubble { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: white; padding: 8px 15px; border-radius: 20px; border: 2px solid #ffb347; font-size: 0.8rem; opacity: 0; transition: opacity 0.5s, left 3s ease-in-out; max-width: 80%; text-align: center; z-index: 10; }
-        
-        .talk-form { display: flex; gap: 5px; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 10px; }
-        .memory-list-container { background: white; border-radius: 15px; padding: 15px; margin-top: 20px; border: 1px solid #eee; }
+        #room-char { position: absolute; bottom: 25px; left: 50%; font-size: 5rem; transition: left 3s ease-in-out; user-select: none; z-index: 5; }
+        .room-bubble {
+            position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%);
+            background: #fff3e0; border: 3px solid #ffcc80; border-radius: 20px;
+            padding: 12px 18px; font-size: 0.9rem; font-weight: bold; color: #e67e22;
+            opacity: 0; transition: opacity 0.5s, left 3s ease-in-out; max-width: 80%; text-align: center; z-index: 10;
+        }
+        .bubble-heart { background: #ffebee !important; border-color: #ff8a80 !important; color: #d32f2f !important; border-radius: 50% 50% 50% 50% / 40% 40% 60% 60% !important; }
+
+        /* ⏱ 24h タイムテーブル */
+        .timeline-container { position: relative; background: #f0f0f0; height: 60px; border-radius: 10px; margin: 40px 0 20px; overflow: hidden; border: 2px solid #ddd; }
+        .time-mark { position: absolute; top: -25px; font-size: 10px; color: #999; }
+        .study-slot { position: absolute; height: 100%; opacity: 0.8; border-right: 1px solid rgba(255,255,255,0.3); }
+        .now-line { position: absolute; top: 0; height: 100%; width: 2px; background: red; z-index: 20; box-shadow: 0 0 5px red; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1 id="title">お部屋</h1>
-</div>
+<div class="header"><h1 id="title">お部屋</h1></div>
 
 <div class="content">
     <section id="room" class="active">
         <div class="room-bubble" id="room-talk">...</div>
         <div id="room-char">🥚</div>
-        <div class="floor"></div>
     </section>
-    
-    <div id="talk-area" style="display: block; margin-bottom: 20px;">
-        <div class="talk-form">
-            <input type="text" id="user-msg" placeholder="キャラにお喋り..." style="flex:1; padding:10px; border:1px solid #ddd; border-radius:5px;">
-            <button onclick="talkToChar()" style="background:#ffb347; color:white; padding:10px 15px;">送信</button>
-        </div>
-        <button onclick="teachWord()" style="width:100%; padding:10px; background:#fff; border:2px dashed #ffb347; color:#ffb347; font-weight:bold; border-radius:10px; margin-bottom: 20px;">📖 好きな言葉を教える</button>
-        <div class="memory-list-container">
-            <h3 style="margin:0; font-size: 0.9rem; color: #ffb347;">📖 覚えたコトバ一覧</h3>
-            <div id="memory-list-content"></div>
-        </div>
+    <div id="talk-area" style="display: block;">
+        <button onclick="teachWord()" style="width:100%; padding:10px; background:#fff; border:2px dashed #ffb347; color:#ffb347; font-weight:bold; border-radius:10px;">📖 言葉を教える</button>
+        <div id="memory-list-content" style="margin-top:10px;"></div>
     </div>
 
-    <section id="habit">
-        <div style="background:white; border:3px solid #ffb347; border-radius:20px; padding:20px; text-align:center; margin-bottom:20px;">
-            <div style="font-size: 4rem;" id="char-emoji">🥚</div>
-            <div style="font-size: 0.8rem; color: #888;" id="rank-display">ランク: たまご</div>
-            <div style="font-size: 2rem; font-weight: bold; color: #e67e22;" id="total-score">0</div>
+    <section id="timer">
+        <h3>24h タイムライン</h3>
+        <div class="timeline-container" id="timeline">
+            <div class="time-mark" style="left:0%">0</div>
+            <div class="time-mark" style="left:25%">6</div>
+            <div class="time-mark" style="left:50%">12</div>
+            <div class="time-mark" style="left:75%">18</div>
+            <div class="time-mark" style="left:98%">24</div>
+            <div id="study-slots-layer"></div>
+            <div class="now-line" id="now-line"></div>
         </div>
-        <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-            <input type="text" id="habit-name" placeholder="習慣名" style="width: 90%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom:10px;">
-            <button onclick="addHabit(10)" style="width:48%; padding: 10px; background: #2ecc71; color: white;">＋</button>
-            <button onclick="addHabit(-10)" style="width:48%; padding: 10px; background: #e74c3c; color: white;">ー</button>
+        <div style="background:white; padding:15px; border-radius:10px;">
+            <p style="font-size:0.8rem; margin:0 0 10px;">手動で追加 (24時間表記):</p>
+            <input type="number" id="start-h" placeholder="時" style="width:45px"> : 
+            <input type="number" id="start-m" placeholder="分" style="width:45px"> 〜 
+            <input type="number" id="end-h" placeholder="時" style="width:45px"> : 
+            <input type="number" id="end-m" placeholder="分" style="width:45px">
+            <button onclick="addSlotManual()" style="background:#ffb347; color:white; padding:5px 10px;">追加</button>
+            <button onclick="clearSlots()" style="background:#eee; padding:5px 10px; font-size:10px; margin-left:10px;">リセット</button>
         </div>
-        <ul id="habit-list" style="list-style: none; padding: 0;"></ul>
     </section>
 
-    <section id="todo"><ul id="todo-list" style="list-style:none;padding:0;"></ul></section>
-    <section id="book"><div id="book-stats" style="background:#ffb347;color:white;padding:15px;border-radius:12px;" id="total-books-count">0 冊</div></section>
+    <section id="todo">
+        <div style="background:white; padding:15px; border-radius:10px; margin-bottom:15px;">
+            <input type="text" id="todo-input" placeholder="やることを入力" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ddd; margin-bottom:10px; box-sizing:border-box;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:0.8rem;">予想時間:</span>
+                <input type="number" id="todo-time" placeholder="分" style="width:60px; padding:8px;">
+                <span style="font-size:0.8rem;">分</span>
+                <button onclick="addTodo()" style="flex:1; background:#ffb347; color:white; padding:10px; font-weight:bold;">追加</button>
+            </div>
+        </div>
+        <ul id="todo-list" style="list-style:none; padding:0;"></ul>
+    </section>
+
+    <section id="habit">
+        <div style="text-align:center; padding:20px; background:white; border-radius:20px; border:3px solid #ffb347;">
+            <div id="char-emoji" style="font-size:4rem;">🥚</div>
+            <div id="total-score" style="font-size:2rem; font-weight:bold; color:#ffb347;">0</div>
+        </div>
+        <button onclick="addHabit(10)" style="width:100%; background:#2ecc71; color:white; padding:15px; margin-top:10px; font-weight:bold;">＋10ポイント！</button>
+    </section>
 </div>
 
 <nav class="tab-bar">
     <button class="tab-item" onclick="showPage('todo', 'Todo')">📝<br>Todo</button>
     <button class="tab-item" onclick="showPage('habit', '習慣')">✨<br>習慣</button>
     <button class="tab-item active" onclick="showPage('room', 'お部屋')">🏠<br>お部屋</button>
-    <button class="tab-item" onclick="showPage('book', '読書')">📚<br>読書</button>
+    <button class="tab-item" onclick="showPage('timer', '時間')">⏱<br>時間</button>
 </nav>
 
 <script>
-    // 安全にデータを取得する関数
-    function getStorage(key, defaultVal) {
-        const val = localStorage.getItem(key);
-        if (!val) return defaultVal;
-        try { return JSON.parse(val); } catch(e) { return defaultVal; }
-    }
+    const getDB = (k, d) => JSON.parse(localStorage.getItem(k) || JSON.stringify(d));
+    const setDB = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+    const colors = ["#ffb347", "#88d8b0", "#ff6f69", "#92a8d1", "#b19cd9", "#f7cac9"];
 
-    window.onload = function() {
-        console.log("App Started");
-        renderHabits();
-        renderMemoryList();
-        // 4秒ごとに移動
+    window.onload = () => {
+        renderHabits(); renderMemoryList(); loadTodos(); updateTimeline();
         setInterval(autoMoveAndTalk, 4000);
-        // 初期ページ設定
+        setInterval(updateTimeline, 60000);
         showPage('room', 'お部屋');
     };
 
-    function showPage(pageId, titleText) {
+    function showPage(p, t) {
         document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
-        const target = document.getElementById(pageId);
+        const target = document.getElementById(p);
         if(target) target.classList.add('active');
-        
-        document.getElementById('title').innerText = titleText;
-        document.getElementById('talk-area').style.display = (pageId === 'room') ? 'block' : 'none';
-        
+        document.getElementById('title').innerText = t;
+        document.getElementById('talk-area').style.display = (p === 'room') ? 'block' : 'none';
         const tabs = document.querySelectorAll('.tab-item');
-        tabs.forEach(t => { if(t.innerText.includes(titleText)) t.classList.add('active'); });
+        tabs.forEach(tab => { if(tab.innerText.includes(t)) tab.classList.add('active'); });
+        if(p === 'timer') updateTimeline();
     }
 
+    // --- 吹き出し & お部屋 ---
     function autoMoveAndTalk() {
         const char = document.getElementById('room-char');
         const talk = document.getElementById('room-talk');
-        if (!char || !talk) return;
-
-        const randomX = Math.floor(Math.random() * 60) + 20;
-        char.style.left = randomX + "%";
-        talk.style.left = randomX + "%";
-
+        if(!char || !talk) return;
+        const x = Math.floor(Math.random() * 60) + 20;
+        char.style.left = x + "%"; talk.style.left = x + "%";
         if (Math.random() > 0.5) {
-            const memory = getStorage('charMemory', []);
-            const defaultMsgs = ["のんびり〜", "お腹すいたな", "頑張ってるね！"];
-            const allMsgs = [...defaultMsgs, ...memory];
-            talk.innerText = allMsgs[Math.floor(Math.random() * allMsgs.length)];
+            const mem = getDB('charMemory', []);
+            const msgs = ["のんびり〜", "集中タイム！", "進んでる？", ...mem];
+            talk.innerText = msgs[Math.floor(Math.random() * msgs.length)];
+            if(Math.random() > 0.7) { talk.classList.add('bubble-heart'); } 
+            else { talk.classList.remove('bubble-heart'); }
             talk.style.opacity = 1;
-            setTimeout(() => { talk.style.opacity = 0; }, 2500);
+            setTimeout(() => talk.style.opacity = 0, 10000);
         }
     }
 
-    function teachWord() {
-        const word = prompt("どんな言葉を教えますか？");
-        if (!word) return;
-        const memory = getStorage('charMemory', []);
-        memory.push(word);
-        localStorage.setItem('charMemory', JSON.stringify(memory));
-        renderMemoryList();
-        alert("覚えたよ！");
+    // --- タイムテーブル ---
+    function updateTimeline() {
+        const now = new Date();
+        const totalMinutes = now.getHours() * 60 + now.getMinutes();
+        const percent = (totalMinutes / 1440) * 100;
+        document.getElementById('now-line').style.left = percent + "%";
+        renderSlots();
     }
 
-    function renderMemoryList() {
-        const memory = getStorage('charMemory', []);
-        const container = document.getElementById('memory-list-content');
-        if(!container) return;
-        container.innerHTML = memory.map((word, i) => `
-            <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee; font-size:0.8rem;">
-                <span>${word}</span>
-                <button onclick="forgetWord(${i})" style="color:#ccc;">✕</button>
-            </div>
+    function renderSlots() {
+        const slots = getDB('studySlots', []);
+        const layer = document.getElementById('study-slots-layer');
+        layer.innerHTML = slots.map(s => {
+            const startPos = (s.start / 1440) * 100;
+            const width = ((s.end - s.start) / 1440) * 100;
+            return `<div class="study-slot" style="left:${startPos}%; width:${width}%; background:${s.color || '#ffb347'}"></div>`;
+        }).join('');
+    }
+
+    function addSlot(startMin, endMin, color) {
+        const slots = getDB('studySlots', []);
+        slots.push({start: startMin, end: endMin, color: color || colors[0]});
+        setDB('studySlots', slots);
+        renderSlots();
+    }
+
+    function addSlotManual() {
+        const sH = parseInt(document.getElementById('start-h').value) || 0;
+        const sM = parseInt(document.getElementById('start-m').value) || 0;
+        const eH = parseInt(document.getElementById('end-h').value) || 0;
+        const eM = parseInt(document.getElementById('end-m').value) || 0;
+        addSlot(sH * 60 + sM, eH * 60 + eM, colors[0]);
+    }
+
+    function clearSlots() { if(confirm("リセットしますか？")) { setDB('studySlots', []); renderSlots(); } }
+
+    // --- TODO ---
+    function addTodo() {
+        const input = document.getElementById('todo-input');
+        const timeInput = document.getElementById('todo-time');
+        if(!input.value) return;
+        const todos = getDB('myTodos', []);
+        todos.push({ title: input.value, time: parseInt(timeInput.value) || 30 });
+        setDB('myTodos', todos);
+        input.value = ""; timeInput.value = ""; loadTodos();
+    }
+
+    function loadTodos() {
+        const todos = getDB('myTodos', []);
+        const list = document.getElementById('todo-list');
+        list.innerHTML = todos.map((t, i) => `
+            <li class="item-card">
+                <span>${t.title} <small style="color:#888;">(${t.time}分)</small></span>
+                <div>
+                    <button onclick="startFocus(${i})" style="background:#ffb347; color:white; padding:8px 12px; font-size:12px;">集中</button>
+                    <button onclick="deleteTodo(${i})" style="color:#ccc; margin-left:10px;">✕</button>
+                </div>
+            </li>
         `).join('');
     }
 
-    function forgetWord(i) {
-        const memory = getStorage('charMemory', []);
-        memory.splice(i, 1);
-        localStorage.setItem('charMemory', JSON.stringify(memory));
-        renderMemoryList();
+    function startFocus(i) {
+        const todos = getDB('myTodos', []);
+        const task = todos[i];
+        const now = new Date();
+        const start = now.getHours() * 60 + now.getMinutes();
+        const end = start + task.time;
+        // ランダムな色を割り当て
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        addSlot(start, Math.min(end, 1440), randomColor);
+        alert(`「${task.title}」を開始！タイムテーブルに${task.time}分追加したよ`);
     }
 
-    function talkToChar() {
-        const input = document.getElementById('user-msg');
-        const talk = document.getElementById('room-talk');
-        if(!input.value) return;
-        talk.innerText = input.value + "？ なるほど！";
-        talk.style.opacity = 1;
-        input.value = "";
-        setTimeout(() => { talk.style.opacity = 0; }, 3000);
+    function deleteTodo(i) {
+        const t = getDB('myTodos', []); t.splice(i, 1);
+        setDB('myTodos', t); loadTodos();
     }
 
+    // --- その他 ---
     function renderHabits() {
-        const s = parseInt(localStorage.getItem('myTotalScore')) || 0;
+        const s = getDB('myTotalScore', 0);
         document.getElementById('total-score').innerText = s;
-        const em = s >= 1000 ? "🍱" : s >= 500 ? "🍛" : s >= 100 ? "🍙" : "🥚";
-        document.getElementById('char-emoji').innerText = em;
-        document.getElementById('room-char').innerText = em;
-        document.getElementById('rank-display').innerText = "ランク: " + (s >= 1000 ? "特上" : s >= 500 ? "満足" : s >= 100 ? "ほかほか" : "たまご");
+        document.getElementById('char-emoji').innerText = s >= 100 ? "🍙" : "🥚";
+        document.getElementById('room-char').innerText = s >= 100 ? "🍙" : "🥚";
     }
-
     function addHabit(p) {
-        let s = parseInt(localStorage.getItem('myTotalScore')) || 0;
-        s += p;
-        localStorage.setItem('myTotalScore', s);
-        renderHabits();
+        let s = getDB('myTotalScore', 0); s += p;
+        setDB('myTotalScore', s); renderHabits();
+    }
+    function teachWord() {
+        const w = prompt("言葉を教えて"); if(!w) return;
+        const m = getDB('charMemory', []); m.push(w);
+        setDB('charMemory', m); renderMemoryList();
+    }
+    function renderMemoryList() {
+        const m = getDB('charMemory', []);
+        document.getElementById('memory-list-content').innerHTML = m.map(w => `<span style="font-size:10px; background:#eee; padding:2px 6px; border-radius:10px; margin:2px; display:inline-block;">${w}</span>`).join('');
     }
 </script>
 </body>
