@@ -3,48 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>もぐもぐライフ</title>
+    <title>デリシャス・スタディ V5</title>
     <style>
-        body { font-family: sans-serif; margin: 0; background: #fff9f0; color: #333; overflow: hidden; }
-        .menu-trigger { position: fixed; top: 15px; left: 15px; z-index: 2000; background: #ffb347; color: white; border: none; padding: 10px; border-radius: 5px; font-size: 1.2rem; cursor: pointer; }
-        .side-menu { position: fixed; top: 0; left: -250px; width: 200px; height: 100%; background: white; z-index: 3000; transition: left 0.3s ease; display: flex; flex-direction: column; padding-top: 60px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+        :root {
+            --main-food: #ffb347;
+            --bg-vanilla: #fff9f0;
+            --text-choco: #5d4037;
+            --btn-green: #8bc34a;
+            --btn-red: #ef5350;
+            --study-orange: #fb8c00;
+        }
+        
+        body { font-family: 'Hiragino Maru Gothic ProN', sans-serif; margin: 0; background: var(--bg-vanilla); color: var(--text-choco); overflow: hidden; }
+        
+        /* ヘッダー：白文字を絶対に見やすく！ */
+        .header { background: var(--main-food); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; position: fixed; top: 0; width: 100%; height: 60px; z-index: 2000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .header h1 { font-size: 1.3rem; margin: 0; flex-grow: 1; text-align: center; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); letter-spacing: 1px; }
+        .menu-btn, .plus-btn { background: none; border: none; color: white; font-size: 1.8rem; cursor: pointer; z-index: 2001; }
+
+        /* サイドメニュー */
+        .side-menu { position: fixed; top: 0; left: -250px; width: 220px; height: 100%; background: white; z-index: 3000; transition: 0.3s ease-out; padding-top: 60px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
         .side-menu.open { left: 0; }
-        .menu-item { border: none; background: none; padding: 20px; text-align: left; font-size: 1rem; color: #666; border-bottom: 1px solid #eee; }
-        .menu-item.active { color: #ffb347; font-weight: bold; background: #fff9f0; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 2500; display: none; }
-        .overlay.open { display: block; }
-        
-        .header { background: #ffb347; color: white; text-align: center; padding: 15px; position: fixed; top: 0; width: 100%; z-index: 1000; height: 50px; box-sizing: border-box; }
-        .content { margin-top: 50px; height: calc(100vh - 50px); position: relative; }
-        
-        section { display: none; height: 100%; overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        .menu-item { width: 100%; padding: 18px 20px; border: none; background: none; text-align: left; font-size: 1rem; cursor: pointer; border-bottom: 1px solid #f0f0f0; color: var(--text-choco); }
+        .menu-item.active { background: #fff0db; color: var(--main-food); font-weight: bold; border-left: 5px solid var(--main-food); }
+
+        .content { margin-top: 60px; height: calc(100vh - 60px); position: relative; }
+        section { display: none; height: 100%; overflow-y: auto; padding: 20px; box-sizing: border-box; padding-bottom: 100px; }
         section.active { display: block; }
 
-        /* 予定（タイムテーブル） */
-        #timer { padding: 0; background: #fff; touch-action: none; }
-        .timer-controls { background: #fff9f0; padding: 15px; border-bottom: 2px solid #ffcc80; }
-        .timeline-wrapper { position: relative; width: 100%; transform-origin: top; padding-bottom: 300px; }
-        .time-row { display: flex; border-bottom: 1px solid #eee; position: relative; box-sizing: border-box; }
-        .time-label { width: 50px; text-align: right; padding-right: 10px; font-size: 0.7rem; color: #999; }
-        
-        .plan-block { position: absolute; left: 50px; right: 0; border-radius: 0; opacity: 0.5; z-index: 1; padding: 5px; font-size: 0.7rem; font-weight: bold; box-sizing: border-box; border-left: 4px solid rgba(0,0,0,0.1); overflow: hidden; }
-        .study-block { position: absolute; left: 60px; right: 10px; border-radius: 5px; opacity: 0.9; z-index: 5; padding: 5px; font-size: 0.75rem; color: white; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); overflow: hidden; }
-        
-        .current-time-bar { position: absolute; left: 50px; right: 0; height: 2px; background: red; z-index: 10; pointer-events: none; }
+        /* キラキラふりかけエフェクト用 */
+        .sparkle { position: fixed; pointer-events: none; z-index: 5000; font-size: 20px; animation: fall 1.5s ease-out forwards; }
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(200px) rotate(360deg); opacity: 0; }
+        }
 
-        /* 共通スタイル */
-        .item-card { background: white; border: 1px solid #eee; padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-reset { background: #fdfdfd; color: #e74c3c; border: 1px solid #e74c3c; padding: 10px; border-radius: 5px; width: 100%; margin-top: 30px; margin-bottom: 50px; font-weight: bold; }
-        input, select { padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        /* キャラ・料理 */
+        #room-char-container { text-align: center; margin-top: 20px; position: relative; }
+        #room-char { font-size: 7rem; cursor: pointer; display: inline-block; transition: transform 0.2s; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        .face { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -10%); font-size: 1.4rem; font-family: cursive; pointer-events: none; color: rgba(0,0,0,0.7); }
+        .room-bubble { background: white; border: 3px solid var(--main-food); border-radius: 20px; padding: 12px; margin-bottom: 25px; font-size: 0.95rem; text-align: center; position: relative; }
 
-        #room-box { background: #fff; border: 4px solid #fce4bd; border-radius: 20px; height: 240px; position: relative; overflow: hidden; margin-bottom: 15px; }
-        #room-char { position: absolute; bottom: 20px; left: 50%; font-size: 5rem; transition: left 3s; z-index: 5; }
-        .room-bubble { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: #fff3e0; border: 3px solid #ffcc80; border-radius: 15px; padding: 10px; font-size: 0.8rem; opacity: 0; transition: opacity 0.5s; z-index: 10; text-align: center; font-weight: bold; }
+        /* 予定・タイムテーブル */
+        #timer { padding: 0; background: #fff; }
+        .timeline-wrapper { position: relative; width: 100%; padding-bottom: 500px; }
+        .time-row { display: flex; border-bottom: 1px solid #eee; height: 60px; }
+        .time-label { width: 50px; text-align: right; padding-right: 10px; font-size: 0.7rem; color: #999; line-height: 20px; }
+        .plan-block { position: absolute; left: 50px; right: 0; opacity: 0.5; z-index: 1; padding: 5px; font-size: 0.7rem; border-left: 4px solid rgba(0,0,0,0.1); border-radius: 0 10px 10px 0; }
+        .study-block { position: absolute; left: 60px; right: 10px; border-radius: 8px; opacity: 0.95; z-index: 5; padding: 8px; font-size: 0.8rem; color: white; font-weight: bold; box-shadow: 0 3px 6px rgba(0,0,0,0.2); }
+        .current-time-bar { position: absolute; left: 50px; right: 0; height: 3px; background: #ef5350; z-index: 10; }
+
+        /* カードデザイン */
+        .card { background: white; border-radius: 15px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .btn-orange { background: var(--main-food); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
+        .btn-green { background: var(--btn-green); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+        .btn-red { background: var(--btn-red); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+
+        /* モーダル */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 420px; }
+        input, select { width: 100%; padding: 12px; margin: 6px 0; border: 2px solid #eee; border-radius: 8px; box-sizing: border-box; }
+
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 2500; display: none; }
+        .overlay.active { display: block; }
+        
+        .log-item { font-size: 0.85rem; padding: 5px 0; border-bottom: 1px dashed #eee; color: #795548; }
     </style>
 </head>
 <body>
 
-<button class="menu-trigger" onclick="toggleMenu()">☰</button>
+<div class="header">
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+    <h1 id="title">お部屋</h1>
+    <button class="plus-btn" id="header-plus" onclick="openPlanModal()" style="visibility: hidden;">＋</button>
+</div>
+
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
 <nav class="side-menu" id="side-menu">
@@ -55,183 +88,331 @@
     <button class="menu-item" onclick="showPage('reading', '読書')">📖 読書</button>
 </nav>
 
-<div class="header"><h1 id="title">お部屋</h1></div>
-
 <div class="content">
     <section id="room" class="active">
-        <div id="room-box"><div class="room-bubble" id="room-talk">...</div><div id="room-char">🥚</div></div>
-        <div id="daily-summary" style="background:#fff3e0; padding:15px; border-radius:10px; text-align:center;">
-            <span style="font-size:0.8rem; color:#e67e22;">今日の合計集中時間</span><br>
-            <strong id="total-study-time" style="font-size:1.5rem; color:#d35400;">0分</strong>
+        <div class="room-bubble" id="talk-bubble">なでると味見できるよ！</div>
+        <div id="room-char-container">
+            <div id="room-char" onclick="petChar()">
+                <span id="char-emoji">🥚</span>
+                <div class="face" id="char-face">^ ^</div>
+            </div>
+            <div id="rank-display" style="margin-top:10px; font-weight:bold; color:var(--main-food); font-size:1.1rem;">メニュー: 生たまご</div>
         </div>
-        <button onclick="teachWord()" style="width:100%; padding:12px; background:#fff; border:2px dashed #ffb347; color:#ffb347; font-weight:bold; border-radius:10px; margin-top:10px;">📖 言葉を教える</button>
+        
+        <div class="card" style="margin-top: 30px; border-left: 5px solid var(--main-food);">
+            <small style="color:var(--main-food); font-weight:bold;">今日のごちそう言葉</small>
+            <div id="meigen-area" style="font-style: italic; margin-top: 5px;"></div>
+        </div>
+
+        <div class="card">
+            <h4 style="margin:0 0 10px; color:var(--main-food); font-size:0.9rem;">本日の完食リスト（献立ログ）</h4>
+            <div id="meal-log"></div>
+        </div>
     </section>
 
     <section id="timer">
-        <div class="timer-controls">
-            <input type="text" id="plan-title" placeholder="予定（睡眠など）" style="width:100%; margin-bottom:5px;">
-            <div style="display:flex; gap:5px; margin-bottom:5px;">
-                <input type="number" id="plan-start" placeholder="開始(時)" style="flex:1;">
-                <input type="number" id="plan-end" placeholder="終了(時)" style="flex:1;">
-            </div>
-            <div style="display:flex; gap:5px; align-items:center;">
-                <select id="plan-color" style="flex:1;">
-                    <option value="#ffe0b2">薄いオレンジ</option>
-                    <option value="#bbdefb">薄いブルー</option>
-                    <option value="#c8e6c9">薄いグリーン</option>
-                </select>
-                <button onclick="addFixedPlan()" style="flex:1; background:#ffb347; color:white; border:none; padding:10px; border-radius:5px; font-weight:bold;">予定を追加</button>
-            </div>
-        </div>
         <div class="timeline-wrapper" id="timeline-wrapper">
             <div id="current-bar" class="current-time-bar"></div>
-            <div id="plan-container" style="position:absolute; width:100%; top:0;"></div>
-            <div id="block-container" style="position:absolute; width:100%; top:0;"></div>
+            <div id="plan-container"></div>
+            <div id="block-container"></div>
         </div>
-        <button class="btn-reset" onclick="clearAllSchedules()">⏱ 予定を一括リセット</button>
+        <button onclick="clearAllSchedules()" style="width:90%; margin:20px 5%; padding:10px; color:var(--btn-red); border:2px solid var(--btn-red); background:none; border-radius:10px; font-weight:bold;">予定を全部リセット</button>
     </section>
 
     <section id="todo">
-        <div style="background:white; padding:15px; border-radius:10px; margin-bottom:15px;">
-            <input type="text" id="todo-input" placeholder="タスク名" style="width:100%; margin-bottom:10px;">
-            <div style="display:flex; gap:10px;">
-                <input type="number" id="todo-time" placeholder="分" style="width:80px;">
-                <button onclick="addTodo()" style="background:#ffb347; color:white; border-radius:5px; border:none; padding:10px 20px;">追加</button>
-            </div>
+        <div class="card">
+            <h4 style="margin:0 0 10px; color:var(--main-food);">今日の注文</h4>
+            <input type="text" id="todo-input" placeholder="タスク名（料理名）">
+            <input type="number" id="todo-time" placeholder="予定時間（分）">
+            <button class="btn-orange" onclick="addTodo()">注文する</button>
         </div>
-        <ul id="todo-list" style="list-style:none; padding:0;"></ul>
+        <div id="todo-list"></div>
     </section>
 
     <section id="habit">
-        <div style="text-align:center; padding:20px; background:white; border-radius:20px; border:3px solid #ffb347; margin-bottom:15px;">
-            <div id="char-emoji-habit" style="font-size:4rem;">🥚</div>
-            <div id="total-score" style="font-size:1.5rem; font-weight:bold; color:#ffb347;">0 pt</div>
+        <div style="text-align:center; padding:20px; background:white; border-radius:18px; border:3px solid var(--main-food); margin-bottom:20px;">
+            <div style="font-size:0.9rem; color:#8d6e63;">現在の満腹度</div>
+            <span id="score-display" style="font-size:2.2rem; font-weight:bold; color:var(--main-food);">0 pt</span>
         </div>
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <input type="text" id="habit-name-input" placeholder="新しい習慣" style="flex:1;">
-            <button onclick="addNewHabit()" style="background:#ffb347; color:white; border:none; border-radius:5px; padding:10px;">作成</button>
+        <div class="card">
+            <input type="text" id="habit-name-input" placeholder="新しい習慣">
+            <button class="btn-orange" onclick="addNewHabit()" style="margin-top:8px;">習慣を追加</button>
         </div>
-        <ul id="habit-list" style="list-style:none; padding:0;"></ul>
+        <div id="habit-list"></div>
     </section>
 
     <section id="reading">
-        <h3>📖 読書マネージャー</h3>
-        <div style="background:white; padding:15px; border-radius:10px; margin-bottom:15px;">
-            <input type="text" id="book-title" placeholder="本のタイトル" style="width:100%; margin-bottom:5px;">
-            <input type="text" id="book-author" placeholder="作者名" style="width:100%; margin-bottom:5px;">
-            <div style="display:flex; gap:5px;">
-                <input type="number" id="book-pages" placeholder="全ページ数" style="flex:1;">
-                <input type="date" id="book-deadline" style="flex:1;">
+        <div class="card" style="border: 2px solid #88d8b0; background:#f1f8e9;">
+            <strong>📚 今年のフルコース: <span id="year-books">0</span>冊</strong>
+            <div id="genre-stats" style="font-size: 0.85rem; color: #666; margin-top: 6px;"></div>
+        </div>
+        <div class="card">
+            <h4 style="margin:0 0 10px; color:#88d8b0;">新しい本を登録</h4>
+            <input type="text" id="bk-title" placeholder="タイトル（必須）">
+            <input type="text" id="bk-author" placeholder="作者名">
+            <input type="text" id="bk-pub" placeholder="発行所">
+            <input type="text" id="bk-year" placeholder="発行年">
+            <select id="bk-genre"><option value="小説">小説</option><option value="実用書">実用書</option><option value="漫画">漫画</option><option value="その他">その他</option></select>
+            <div style="display:flex; gap:8px;">
+                <input type="number" id="bk-pages" placeholder="全ページ">
+                <input type="date" id="bk-date">
             </div>
-            <button onclick="addBook()" style="width:100%; background:#88d8b0; color:white; border:none; border-radius:5px; padding:12px; margin-top:10px;">本を登録</button>
+            <button class="btn-orange" onclick="addBook()" style="background:#88d8b0; margin-top:10px;">本を追加</button>
         </div>
         <div id="book-list"></div>
     </section>
 </div>
 
+<div class="modal" id="plan-modal">
+    <div class="modal-content">
+        <h3>新しい予定を追加</h3>
+        <input type="text" id="p-name" placeholder="予定名">
+        <input type="number" id="p-start" placeholder="開始(0-23)">
+        <input type="number" id="p-end" placeholder="終了(0-23)">
+        <select id="p-color">
+            <option value="#ffe0b2">オレンジ（杏子）</option>
+            <option value="#bbdefb">ブルー（ソーダ）</option>
+            <option value="#c8e6c9">グリーン（メロン）</option>
+        </select>
+        <div style="display:flex; gap:12px; margin-top:20px;">
+            <button class="btn-orange" onclick="savePlan()" style="flex:1;">保存</button>
+            <button onclick="closePlanModal()" style="flex:1; background:#eee; border:none; border-radius:10px;">閉じる</button>
+        </div>
+    </div>
+</div>
+
 <script>
     const getDB = (k, d) => JSON.parse(localStorage.getItem(k) || JSON.stringify(d));
     const setDB = (k, v) => localStorage.setItem(k, JSON.stringify(v));
-    const studyColors = ["#fb8c00", "#43a047", "#1e88e5", "#e53935", "#8e24aa"];
-    let currentZoom = 60; let lastDist = 0;
+
+    const foodMeigens = ["勉強は別腹。", "知識は人生のフルコース。", "努力はおいしいスパイス。", "集中という名のメインディッシュ。"];
+    const faces = ["^ ^", "O O", "u u", "* *", "> <"];
+    const sprinkleIcons = ["✨", "🍭", "🍰", "⭐", "🍳", "🍗"];
+
+    let lastRank = "";
 
     window.onload = () => {
-        initTimeline(); renderHabits(); loadTodos(); renderBooks(); updateTimeBar();
-        const timerSec = document.getElementById('timer');
-        timerSec.addEventListener('touchstart', e => { if(e.touches.length === 2) lastDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); });
-        timerSec.addEventListener('touchmove', e => { 
-            if(e.touches.length === 2) {
-                e.preventDefault();
-                const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                if(lastDist > 0) { currentZoom = Math.max(40, Math.min(300, currentZoom + (dist - lastDist) * 0.5)); applyZoom(); }
-                lastDist = dist;
-            }
-        }, {passive: false});
-        setInterval(autoMoveAndTalk, 4000); setInterval(updateTimeBar, 60000);
+        initTimeline(); 
+        renderAll();
+        setInterval(updateTimeBar, 60000);
+        updateTimeBar();
+        lastRank = getRankName(getDB('myTotalScore', 0));
     };
 
-    function toggleMenu() { document.getElementById('side-menu').classList.toggle('open'); document.getElementById('overlay').classList.toggle('open'); }
-    function showPage(p, t) {
-        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-        document.getElementById(p).classList.add('active');
-        document.getElementById('title').innerText = t;
-        if(p === 'timer') { applyZoom(); scrollToNow(); }
-        toggleMenu();
+    function toggleMenu() {
+        document.getElementById('side-menu').classList.toggle('open');
+        document.getElementById('overlay').classList.toggle('active');
     }
 
-    // --- 一括リセット機能 ---
-    function clearAllSchedules() {
-        if(confirm("【確認】背景の予定と、今日記録した集中タスクをすべて消去しますか？")) {
-            if(confirm("【最終確認】本当によろしいですか？この操作は取り消せません。")) {
-                setDB('fixedPlans', []);
-                setDB('studySlots', []);
-                renderBlocks();
-                calcTotalStudyTime();
-                alert("すべての予定をリセットしました。");
-            }
+    function showPage(p, t) {
+        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        document.getElementById(p).classList.add('active');
+        document.getElementById('title').innerText = t;
+        document.getElementById('header-plus').style.visibility = (p === 'timer') ? 'visible' : 'hidden';
+        const items = document.querySelectorAll('.menu-item');
+        items.forEach(item => { if(item.innerText.includes(t)) item.classList.add('active'); });
+        toggleMenu();
+        if(p === 'timer') { scrollToNow(); renderBlocks(); }
+        renderAll();
+    }
+
+    // 進化 & エフェクト
+    function getRankName(score) {
+        if(score >= 1000) return "🎂";
+        if(score >= 500) return "🍖";
+        if(score >= 300) return "🍱";
+        if(score >= 150) return "🍛";
+        if(score >= 50) return "🍳";
+        return "🥚";
+    }
+
+    function createSprinkles() {
+        for(let i=0; i<20; i++) {
+            const s = document.createElement('div');
+            s.className = 'sparkle';
+            s.innerText = sprinkleIcons[Math.floor(Math.random()*sprinkleIcons.length)];
+            s.style.left = Math.random() * 100 + "vw";
+            s.style.top = "-20px";
+            s.style.fontSize = (Math.random() * 20 + 20) + "px";
+            document.body.appendChild(s);
+            setTimeout(() => s.remove(), 1500);
         }
     }
 
-    function addFixedPlan() {
-        const title = document.getElementById('plan-title').value;
-        const startH = parseInt(document.getElementById('plan-start').value);
-        const endH = parseInt(document.getElementById('plan-end').value);
-        const color = document.getElementById('plan-color').value;
-        if(!title || isNaN(startH)) return;
+    function updateChar() {
+        const score = getDB('myTotalScore', 0);
+        const emoji = getRankName(score);
+        const rankNames = {"🎂":"豪華ケーキ","🍖":"マンガ肉","🍱":"特上お弁当","🍛":"カレーライス","🍳":"目玉焼き","🥚":"生たまご"};
+        
+        if(emoji !== lastRank) {
+            createSprinkles(); // ランクアップエフェクト！
+            lastRank = emoji;
+        }
+
+        document.getElementById('char-emoji').innerText = emoji;
+        document.getElementById('rank-display').innerText = "メニュー: " + rankNames[emoji];
+        document.getElementById('score-display').innerText = score + " pt";
+    }
+
+    function petChar() {
+        const char = document.getElementById('room-char');
+        const face = document.getElementById('char-face');
+        char.style.transform = "scale(1.2) rotate(5deg)";
+        setTimeout(() => char.style.transform = "scale(1.0) rotate(0deg)", 200);
+        face.innerText = "❤️";
+        document.getElementById('talk-bubble').innerText = "おいしい！もっと頑張るね！";
+        setTimeout(() => { face.innerText = faces[Math.floor(Math.random()*faces.length)]; }, 1000);
+    }
+
+    // 献立ログ
+    function addMealLog(title) {
+        const logs = getDB('mealLogs', []);
+        const now = new Date();
+        logs.unshift({ title, time: now.getHours() + ":" + String(now.getMinutes()).padStart(2, '0') });
+        setDB('mealLogs', logs.slice(0, 5)); // 直近5件
+        renderLogs();
+    }
+
+    function renderLogs() {
+        const logs = getDB('mealLogs', []);
+        document.getElementById('meal-log').innerHTML = logs.length ? 
+            logs.map(l => `<div class="log-item">🍽 ${l.time} - ${l.title} を完食！</div>`).join('') :
+            "<div style='font-size:0.8rem; color:#ccc;'>まだ完食したメニューはありません</div>";
+    }
+
+    // --- 各種機能（維持！） ---
+    function openPlanModal() { document.getElementById('plan-modal').style.display = 'flex'; }
+    function closePlanModal() { document.getElementById('plan-modal').style.display = 'none'; }
+    function savePlan() {
+        const title = document.getElementById('p-name').value;
+        const start = parseInt(document.getElementById('p-start').value);
+        const end = parseInt(document.getElementById('p-end').value);
+        if(!title || isNaN(start)) return;
         const plans = getDB('fixedPlans', []);
-        plans.push({ title, start: startH * 60, end: (endH || startH + 1) * 60, color });
-        setDB('fixedPlans', plans); renderBlocks();
+        plans.push({title, start: start*60, end: (end||start+1)*60, color: document.getElementById('p-color').value});
+        setDB('fixedPlans', plans); renderBlocks(); closePlanModal();
     }
 
     function initTimeline() {
         const wrapper = document.getElementById('timeline-wrapper');
-        const oldRows = wrapper.querySelectorAll('.time-row'); oldRows.forEach(r => r.remove());
+        wrapper.querySelectorAll('.time-row').forEach(r => r.remove());
         for(let i=0; i<24; i++) {
-            const row = document.createElement('div'); row.className = 'time-row'; row.style.height = currentZoom + 'px';
-            row.innerHTML = `<div class="time-label">${i}:00</div><div style="flex:1; border-left:2px solid #ffcc80;"></div>`;
+            const row = document.createElement('div');
+            row.className = 'time-row';
+            row.innerHTML = `<div class="time-label">${i}:00</div><div style="flex:1; border-left:3px solid #ffe0b2;"></div>`;
             wrapper.appendChild(row);
         }
     }
-    function applyZoom() { document.querySelectorAll('.time-row').forEach(r => r.style.height = currentZoom + 'px'); renderBlocks(); updateTimeBar(); }
-    
+
     function renderBlocks() {
-        const zoom = currentZoom / 60;
         const plans = getDB('fixedPlans', []);
         document.getElementById('plan-container').innerHTML = plans.map(p => 
-            `<div class="plan-block" style="top:${p.start * zoom}px; height:${(p.end-p.start) * zoom}px; background:${p.color};">${p.title}</div>`
+            `<div class="plan-block" style="top:${p.start}px; height:${(p.end-p.start)}px; background:${p.color};">${p.title}</div>`
         ).join('');
         const slots = getDB('studySlots', []);
         document.getElementById('block-container').innerHTML = slots.map(s => 
-            `<div class="study-block" style="top:${s.start * zoom}px; height:${(s.end-s.start) * zoom}px; background:${s.color};">${s.title}</div>`
+            `<div class="study-block" style="top:${s.start}px; height:${(s.end-s.start)}px; background:var(--study-orange);">${s.title}</div>`
         ).join('');
     }
+
     function updateTimeBar() {
-        const now = new Date(); const bar = document.getElementById('current-bar');
-        if(bar) bar.style.top = (now.getHours() * 60 + now.getMinutes()) * (currentZoom / 60) + "px";
+        const now = new Date();
+        const bar = document.getElementById('current-bar');
+        if(bar) bar.style.top = (now.getHours() * 60 + now.getMinutes()) + "px";
     }
-    function scrollToNow() { document.getElementById('timer').scrollTop = (new Date().getHours() * 60) * (currentZoom / 60) - 100; }
+
+    function scrollToNow() { document.getElementById('timer').scrollTop = (new Date().getHours() * 60) - 100; }
+
+    function addTodo() {
+        const title = document.getElementById('todo-input').value;
+        const time = parseInt(document.getElementById('todo-time').value) || 30;
+        if(!title) return;
+        const todos = getDB('myTodos', []);
+        todos.push({title, time}); setDB('myTodos', todos);
+        document.getElementById('todo-input').value = ''; document.getElementById('todo-time').value = '';
+        renderTodos();
+    }
+
+    function renderTodos() {
+        const todos = getDB('myTodos', []);
+        document.getElementById('todo-list').innerHTML = todos.map((t, i) => `
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <span><strong>${t.title}</strong> (${t.time}分)</span>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-green" onclick="startFocus(${i})">味見</button>
+                    <button class="btn-red" onclick="deleteTodo(${i})">完食！</button>
+                </div>
+            </div>
+        `).join('');
+    }
 
     function startFocus(i) {
-        const task = getDB('myTodos', [])[i]; const now = new Date(); const start = now.getHours() * 60 + now.getMinutes();
+        const task = getDB('myTodos', [])[i];
+        const now = new Date();
+        const start = now.getHours() * 60 + now.getMinutes();
         const slots = getDB('studySlots', []);
-        slots.push({ start, end: start + task.time, title: task.title, color: studyColors[Math.floor(Math.random() * studyColors.length)] });
-        setDB('studySlots', slots); renderBlocks(); calcTotalStudyTime(); alert("集中を記録しました！");
+        slots.push({start, end: start + task.time, title: task.title});
+        setDB('studySlots', slots); renderBlocks();
     }
 
-    function calcTotalStudyTime() {
-        const slots = getDB('studySlots', []); let total = slots.reduce((acc, s) => acc + (s.end - s.start), 0);
-        document.getElementById('total-study-time').innerText = total + "分"; return total;
+    function deleteTodo(i) {
+        const todos = getDB('myTodos', []);
+        addMealLog(todos[i].title);
+        todos.splice(i, 1);
+        setDB('myTodos', todos); renderTodos(); renderLogs();
     }
 
-    function addNewHabit() { const input = document.getElementById('habit-name-input'); if(!input.value) return; const h = getDB('myHabitList', ["勉強"]); h.push(input.value); setDB('myHabitList', h); input.value = ""; renderHabits(); }
-    function renderHabits() { const score = getDB('myTotalScore', 0); document.getElementById('total-score').innerText = score + " pt"; document.getElementById('char-emoji-habit').innerText = score >= 100 ? "🍙" : "🥚"; document.getElementById('room-char').innerText = score >= 100 ? "🍙" : "🥚"; }
-    function updateScore(p) { let s = getDB('myTotalScore', 0); s += p; setDB('myTotalScore', s); renderHabits(); }
-    function loadTodos() { const todos = getDB('myTodos', []); document.getElementById('todo-list').innerHTML = todos.map((t, i) => `<li class="item-card"><span>${t.title}</span><button onclick="startFocus(${i})" style="background:#ffb347; color:white; border:none; border-radius:5px; padding:8px;">集中</button></li>`).join(''); }
-    function addTodo() { const input = document.getElementById('todo-input'); const time = document.getElementById('todo-time'); if(!input.value) return; const t = getDB('myTodos', []); t.push({title:input.value, time:parseInt(time.value)||30}); setDB('myTodos', t); input.value=""; time.value=""; loadTodos(); }
-    function renderBooks() { const b = getDB('myBooks', []); document.getElementById('book-list').innerHTML = b.map(book => `<div class="item-card"><span>${book.title}</span></div>`).join(''); }
-    function addBook() { const t = document.getElementById('book-title').value; if(!t) return; const b = getDB('myBooks', []); b.push({title:t}); setDB('myBooks', b); renderBooks(); }
-    function autoMoveAndTalk() { const char = document.getElementById('room-char'); const talk = document.getElementById('room-talk'); if(!char||!talk) return; char.style.left = (Math.random()*60+20)+"%"; talk.style.opacity = 1; setTimeout(()=>talk.style.opacity=0, 3000); }
-    function teachWord() { const w = prompt("言葉を教えて"); if(!w) return; const m = getDB('charMemory', []); m.push(w); setDB('charMemory', m); }
+    function addNewHabit() {
+        const val = document.getElementById('habit-name-input').value; if(!val) return;
+        const h = getDB('myHabitList', ["勉強", "運動"]); h.push(val);
+        setDB('myHabitList', h); document.getElementById('habit-name-input').value = ''; renderHabits();
+    }
+
+    function renderHabits() {
+        const h = getDB('myHabitList', ["勉強", "運動"]);
+        document.getElementById('habit-list').innerHTML = h.map((name, i) => `
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <span><strong>${name}</strong></span>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn-green" onclick="updateScore(10)">おかわり</button>
+                    <button class="btn-red" onclick="updateScore(-10)">残す</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateScore(p) {
+        let s = getDB('myTotalScore', 0); s += p; if(s < 0) s = 0;
+        setDB('myTotalScore', s); updateChar();
+    }
+
+    function addBook() {
+        const title = document.getElementById('bk-title').value; if(!title) return;
+        const b = getDB('myBooks', []);
+        b.push({ title, author: document.getElementById('bk-author').value, pub: document.getElementById('bk-pub').value, year: document.getElementById('bk-year').value, genre: document.getElementById('bk-genre').value, added: new Date().toLocaleDateString() });
+        setDB('myBooks', b); renderBooks();
+    }
+
+    function renderBooks() {
+        const b = getDB('myBooks', []);
+        document.getElementById('year-books').innerText = b.length;
+        const g = {}; b.forEach(x => g[x.genre] = (g[x.genre] || 0) + 1);
+        document.getElementById('genre-stats').innerText = "コース内訳: " + Object.entries(g).map(([k,v]) => `${k}(${v})`).join(', ');
+        document.getElementById('book-list').innerHTML = b.map((x, i) => `
+            <div class="card" onclick="alert('作者: ${x.author}\\n発行所: ${x.pub}\\n年: ${x.year}\\n登録: ${x.added}')">
+                <strong>${x.title}</strong><br><small>${x.author} / ${x.genre}</small>
+            </div>
+        `).join('');
+    }
+
+    function clearAllSchedules() { if(confirm("リセットする？")) { setDB('fixedPlans', []); setDB('studySlots', []); renderBlocks(); } }
+
+    function renderAll() {
+        renderTodos(); renderHabits(); renderBooks(); updateChar(); renderLogs();
+        document.getElementById('meigen-area').innerText = foodMeigens[Math.floor(Math.random()*foodMeigens.length)];
+    }
 </script>
+
 </body>
 </html>
