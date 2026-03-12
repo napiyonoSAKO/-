@@ -6,78 +6,101 @@
     <title>もぐもぐスケジュール</title>
     <style>
         body { font-family: sans-serif; margin: 0; background: #fff9f0; color: #333; overflow: hidden; }
-        .header { background: #ffb347; color: white; text-align: center; padding: 10px; position: fixed; top: 0; width: 100%; z-index: 100; }
-        .tab-bar { position: fixed; bottom: 0; width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #ddd; z-index: 1000; }
-        .tab-item { border: none; background: none; font-size: 12px; color: #666; flex: 1; }
-        .tab-item.active { color: #ffb347; font-weight: bold; }
         
-        section { display: none; height: calc(100vh - 120px); margin-top: 50px; overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        /* ☰ メニューボタン */
+        .menu-trigger { position: fixed; top: 15px; left: 15px; z-index: 2000; background: #ffb347; color: white; border: none; padding: 10px; border-radius: 5px; font-size: 1.2rem; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        /* 🚪 左からの引き出しメニュー */
+        .side-menu { position: fixed; top: 0; left: -250px; width: 200px; height: 100%; background: white; z-index: 3000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; padding-top: 60px; }
+        .side-menu.open { left: 0; }
+        .menu-item { border: none; background: none; padding: 20px; text-align: left; font-size: 1rem; color: #666; border-bottom: 1px solid #eee; cursor: pointer; }
+        .menu-item.active { color: #ffb347; font-weight: bold; background: #fff9f0; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 2500; display: none; }
+        .overlay.open { display: block; }
+
+        /* 📱 コンテンツエリアの調整 */
+        .header { background: #ffb347; color: white; text-align: center; padding: 15px; position: fixed; top: 0; width: 100%; z-index: 1000; height: 50px; box-sizing: border-box; }
+        .content { margin-top: 60px; height: calc(100vh - 60px); overflow: hidden; position: relative; }
+        
+        section { display: none; height: 100%; overflow-y: auto; padding: 20px; box-sizing: border-box; }
         section.active { display: block; }
 
         /* ⏱ 縦型タイムテーブル */
-        #timer { padding: 0; background: #fff; overflow-y: auto; position: relative; touch-action: none; /* ピンチ操作のためにデフォルト動作を抑制 */ }
+        #timer { padding: 0; background: #fff; touch-action: none; }
         .timeline-wrapper { position: relative; width: 100%; transform-origin: top; }
-        .time-row { display: flex; border-bottom: 1px solid #eee; position: relative; }
+        .time-row { display: flex; border-bottom: 1px solid #eee; position: relative; box-sizing: border-box; }
         .time-label { width: 50px; text-align: right; padding-right: 10px; font-size: 0.7rem; color: #999; }
         .time-slot-bg { flex: 1; border-left: 2px solid #ffcc80; position: relative; }
-        
         .study-block { position: absolute; left: 5px; right: 5px; border-radius: 5px; opacity: 0.8; z-index: 5; padding: 5px; font-size: 0.7rem; color: white; box-sizing: border-box; overflow: hidden; font-weight: bold; }
         .current-time-bar { position: absolute; left: 50px; right: 0; height: 2px; background: red; z-index: 10; pointer-events: none; }
-        .current-time-bar::after { content: ''; position: absolute; left: -5px; top: -4px; border-width: 5px; border-style: solid; border-color: transparent transparent transparent red; }
 
         /* 🏠 お部屋 */
-        #room { background: #fff; border: 4px solid #fce4bd; border-radius: 20px; height: 300px; position: relative; overflow: hidden; margin-top: 10px; }
+        #room { background: #fff; border: 4px solid #fce4bd; border-radius: 20px; height: 300px; position: relative; overflow: hidden; }
         #room-char { position: absolute; bottom: 25px; left: 50%; font-size: 5rem; transition: left 3s; z-index: 5; }
         .room-bubble { position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%); background: #fff3e0; border: 3px solid #ffcc80; border-radius: 15px; padding: 10px; font-size: 0.8rem; opacity: 0; transition: opacity 0.5s, left 3s; z-index: 10; max-width: 70%; text-align: center; }
         .bubble-heart { border-color: #ff8a80; color: #d32f2f; border-radius: 30px; }
 
-        .item-card { background: white; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        /* 🛠 ボタン・カード */
+        .item-card { background: white; border: 1px solid #eee; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-plus { background: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; }
+        .btn-minus { background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="header"><h1 id="title">お部屋</h1></div>
+<button class="menu-trigger" onclick="toggleMenu()">☰</button>
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<nav class="side-menu" id="side-menu">
+    <button class="menu-item active" onclick="showPage('room', 'お部屋')">🏠 お部屋</button>
+    <button class="menu-item" onclick="showPage('timer', '予定')">⏱ 予定</button>
+    <button class="menu-item" onclick="showPage('todo', 'Todo')">📝 Todo</button>
+    <button class="menu-item" onclick="showPage('habit', '習慣')">✨ 習慣</button>
+</nav>
+
+<div class="header"><h1 id="title" style="margin:0; font-size:1rem;">お部屋</h1></div>
 
 <div class="content">
     <section id="room" class="active">
         <div class="room-bubble" id="room-talk">...</div>
         <div id="room-char">🥚</div>
         <div style="position:absolute; bottom:0; width:100%; height:20px; background:#f0f0f0;"></div>
+        <div style="margin-top:20px;">
+            <button onclick="teachWord()" style="width:100%; padding:12px; background:#fff; border:2px dashed #ffb347; color:#ffb347; font-weight:bold; border-radius:10px;">📖 言葉を教える</button>
+            <div id="memory-list-content" style="margin-top:10px;"></div>
+        </div>
     </section>
 
     <section id="timer">
         <div class="timeline-wrapper" id="timeline-wrapper">
             <div id="current-bar" class="current-time-bar"></div>
-            <div id="block-container"></div>
-            </div>
+            <div id="block-container" style="position:absolute; width:100%; top:0; left:50px;"></div>
+        </div>
     </section>
 
     <section id="todo">
-        <div style="background:white; padding:15px; border-radius:10px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-            <input type="text" id="todo-input" placeholder="タスク名" style="width:100%; padding:10px; border:1px solid #ddd; margin-bottom:10px; border-radius:5px; box-sizing:border-box;">
+        <div style="background:white; padding:15px; border-radius:10px; margin-bottom:15px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+            <input type="text" id="todo-input" placeholder="タスク名" style="width:100%; padding:12px; border:1px solid #ddd; margin-bottom:10px; border-radius:8px; box-sizing:border-box;">
             <div style="display:flex; gap:10px;">
-                <input type="number" id="todo-time" placeholder="分" style="width:70px; padding:10px; border:1px solid #ddd; border-radius:5px;">
-                <button onclick="addTodo()" style="flex:1; background:#ffb347; color:white; border-radius:5px; font-weight:bold; border:none;">追加</button>
+                <input type="number" id="todo-time" placeholder="分" style="width:80px; padding:12px; border:1px solid #ddd; border-radius:8px;">
+                <button onclick="addTodo()" style="flex:1; background:#ffb347; color:white; border-radius:8px; font-weight:bold; border:none;">追加</button>
             </div>
         </div>
         <ul id="todo-list" style="list-style:none; padding:0;"></ul>
     </section>
 
     <section id="habit">
-        <div style="text-align:center; padding:30px; background:white; border-radius:20px; border:3px solid #ffb347;">
+        <div style="text-align:center; padding:30px; background:white; border-radius:20px; border:3px solid #ffb347; margin-bottom:20px;">
             <div id="char-emoji" style="font-size:5rem;">🥚</div>
             <div id="total-score" style="font-size:2rem; font-weight:bold; color:#ffb347;">0 pt</div>
         </div>
-        <button onclick="addHabit(10)" style="width:100%; background:#2ecc71; color:white; padding:20px; margin-top:20px; font-weight:bold; border-radius:10px; font-size:1.2rem; border:none;">＋10ポイント！</button>
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <input type="text" id="habit-name-input" placeholder="新しい習慣" style="flex:1; padding:12px; border:1px solid #ddd; border-radius:8px;">
+            <button onclick="addNewHabit()" style="background:#ffb347; color:white; padding:12px; border-radius:8px; border:none;">作成</button>
+        </div>
+        <ul id="habit-list" style="list-style:none; padding:0;"></ul>
     </section>
 </div>
-
-<nav class="tab-bar">
-    <button class="tab-item" onclick="showPage('todo', 'Todo')">📝<br>Todo</button>
-    <button class="tab-item" onclick="showPage('habit', '習慣')">✨<br>習慣</button>
-    <button class="tab-item active" onclick="showPage('room', 'お部屋')">🏠<br>お部屋</button>
-    <button class="tab-item" onclick="showPage('timer', '予定')">⏱<br>予定</button>
-</nav>
 
 <script>
     const getDB = (k, d) => JSON.parse(localStorage.getItem(k) || JSON.stringify(d));
@@ -85,55 +108,41 @@
     const colors = ["#ffb347", "#88d8b0", "#ff6f69", "#92a8d1", "#b19cd9", "#f7cac9"];
     
     let currentZoom = 60; 
-    let lastDist = 0; // ピンチ操作用
+    let lastDist = 0;
 
     window.onload = () => {
-        initTimeline();
-        renderHabits();
-        loadTodos();
-        updateTimeBar();
+        initTimeline(); renderHabits(); loadTodos(); updateTimeBar();
         setInterval(autoMoveAndTalk, 4000);
         setInterval(updateTimeBar, 60000);
         
-        // ピンチイベントの登録
         const timerSec = document.getElementById('timer');
-        timerSec.addEventListener('touchstart', handleTouchStart, {passive: false});
-        timerSec.addEventListener('touchmove', handleTouchMove, {passive: false});
-        timerSec.addEventListener('touchend', () => { lastDist = 0; });
-
-        showPage('room', 'お部屋');
+        timerSec.addEventListener('touchstart', e => { if(e.touches.length === 2) lastDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); }, {passive: false});
+        timerSec.addEventListener('touchmove', e => { 
+            if(e.touches.length === 2) {
+                e.preventDefault();
+                const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+                if(lastDist > 0) { currentZoom = Math.max(30, Math.min(250, currentZoom + (dist - lastDist) * 0.5)); applyZoom(); }
+                lastDist = dist;
+            }
+        }, {passive: false});
     };
 
-    // --- ズーム操作（ピンチ） ---
-    function handleTouchStart(e) {
-        if (e.touches.length === 2) {
-            lastDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-        }
+    function toggleMenu() {
+        document.getElementById('side-menu').classList.toggle('open');
+        document.getElementById('overlay').classList.toggle('open');
     }
 
-    function handleTouchMove(e) {
-        if (e.touches.length === 2) {
-            e.preventDefault(); // 画面全体のスクロールを止める
-            const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-            if (lastDist > 0) {
-                const diff = dist - lastDist;
-                // 感度を調整してズーム
-                currentZoom = Math.max(30, Math.min(250, currentZoom + diff * 0.5));
-                applyZoom();
-            }
-            lastDist = dist;
-        } else if (e.touches.length === 1) {
-            // 1本指の時は通常のスクロールを許可
-            const timerSec = document.getElementById('timer');
-            // ここではpreventDefaultしない
-        }
-    }
-
-    function applyZoom() {
-        const rows = document.querySelectorAll('.time-row');
-        rows.forEach(r => r.style.height = currentZoom + 'px');
-        updateTimeBar();
-        renderBlocks();
+    function showPage(p, t) {
+        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        document.getElementById(p).classList.add('active');
+        document.getElementById('title').innerText = t;
+        
+        const menuItems = document.querySelectorAll('.menu-item');
+        menuItems.forEach(item => { if(item.innerText.includes(t)) item.classList.add('active'); });
+        
+        if(p === 'timer') { applyZoom(); scrollToNow(); }
+        toggleMenu();
     }
 
     function initTimeline() {
@@ -141,11 +150,15 @@
         wrapper.innerHTML = '<div id="current-bar" class="current-time-bar"></div><div id="block-container" style="position:absolute; width:100%; top:0; left:50px;"></div>';
         for(let i=0; i<24; i++) {
             const row = document.createElement('div');
-            row.className = 'time-row';
-            row.style.height = currentZoom + 'px';
+            row.className = 'time-row'; row.style.height = currentZoom + 'px';
             row.innerHTML = `<div class="time-label">${i}:00</div><div class="time-slot-bg"></div>`;
             wrapper.appendChild(row);
         }
+    }
+
+    function applyZoom() {
+        document.querySelectorAll('.time-row').forEach(r => r.style.height = currentZoom + 'px');
+        updateTimeBar(); renderBlocks();
     }
 
     function updateTimeBar() {
@@ -153,6 +166,11 @@
         const minutes = now.getHours() * 60 + now.getMinutes();
         const bar = document.getElementById('current-bar');
         if(bar) bar.style.top = (minutes * (currentZoom / 60)) + "px";
+    }
+
+    function scrollToNow() {
+        const now = new Date();
+        document.getElementById('timer').scrollTop = (now.getHours() * 60 + now.getMinutes()) * (currentZoom / 60) - 100;
     }
 
     function renderBlocks() {
@@ -166,21 +184,41 @@
         }).join('');
     }
 
-    // --- 他の機能 ---
-    function showPage(p, t) {
-        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
-        document.getElementById(p).classList.add('active');
-        document.getElementById('title').innerText = t;
-        const tabs = document.querySelectorAll('.tab-item');
-        tabs.forEach(tab => { if(tab.innerText.includes(t)) tab.classList.add('active'); });
-        if(p === 'timer') {
-            applyZoom();
-            const now = new Date();
-            document.getElementById('timer').scrollTop = (now.getHours() * 60 + now.getMinutes()) * (currentZoom / 60) - 100;
-        }
+    // --- 習慣機能（修正版） ---
+    function addNewHabit() {
+        const input = document.getElementById('habit-name-input');
+        if(!input.value) return;
+        const habits = getDB('myHabitList', ["読書", "勉強"]);
+        habits.push(input.value);
+        setDB('myHabitList', habits);
+        input.value = ""; renderHabits();
     }
 
+    function renderHabits() {
+        const score = getDB('myTotalScore', 0);
+        document.getElementById('total-score').innerText = score + " pt";
+        document.getElementById('char-emoji').innerText = score >= 100 ? "🍙" : "🥚";
+        document.getElementById('room-char').innerText = score >= 100 ? "🍙" : "🥚";
+
+        const habits = getDB('myHabitList', ["読書", "勉強"]);
+        const list = document.getElementById('habit-list');
+        list.innerHTML = habits.map((h, i) => `
+            <li class="item-card">
+                <span>${h}</span>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-plus" onclick="updateScore(10)">+10</button>
+                    <button class="btn-minus" onclick="updateScore(-10)">-10</button>
+                </div>
+            </li>
+        `).join('');
+    }
+
+    function updateScore(p) {
+        let s = getDB('myTotalScore', 0); s += p;
+        setDB('myTotalScore', s); renderHabits();
+    }
+
+    // --- その他 ---
     function autoMoveAndTalk() {
         const char = document.getElementById('room-char');
         const talk = document.getElementById('room-talk');
@@ -188,7 +226,7 @@
         const x = Math.floor(Math.random() * 60) + 20;
         char.style.left = x + "%"; talk.style.left = x + "%";
         if (Math.random() > 0.5) {
-            const msgs = ["お疲れ様！", "集中できてるね", "水分補給も忘れずに！"];
+            const msgs = ["順調かな？", "休憩もしようね", "次はこれをする？"];
             talk.innerText = msgs[Math.floor(Math.random() * msgs.length)];
             talk.className = Math.random() > 0.7 ? 'room-bubble bubble-heart' : 'room-bubble';
             talk.style.opacity = 1;
@@ -196,53 +234,34 @@
         }
     }
 
-    function addTodo() {
-        const input = document.getElementById('todo-input');
-        const timeInput = document.getElementById('todo-time');
-        if(!input.value) return;
-        const todos = getDB('myTodos', []);
-        todos.push({ title: input.value, time: parseInt(timeInput.value) || 30 });
-        setDB('myTodos', todos);
-        input.value = ""; timeInput.value = ""; loadTodos();
-    }
-
     function loadTodos() {
         const todos = getDB('myTodos', []);
-        const list = document.getElementById('todo-list');
-        list.innerHTML = todos.map((t, i) => `
+        document.getElementById('todo-list').innerHTML = todos.map((t, i) => `
             <li class="item-card">
                 <span>${t.title} (${t.time}分)</span>
-                <button onclick="startFocus(${i})" style="background:#ffb347; color:white; padding:8px 12px; border-radius:5px; border:none; font-size:0.7rem;">集中</button>
+                <button onclick="startFocus(${i})" style="background:#ffb347; color:white; padding:8px 12px; border-radius:5px; border:none;">集中</button>
             </li>
         `).join('');
     }
 
-    function startFocus(i) {
+    function addTodo() {
+        const input = document.getElementById('todo-input');
+        const time = document.getElementById('todo-time');
+        if(!input.value) return;
         const todos = getDB('myTodos', []);
-        const task = todos[i];
+        todos.push({ title: input.value, time: parseInt(time.value) || 30 });
+        setDB('myTodos', todos);
+        input.value = ""; time.value = ""; loadTodos();
+    }
+
+    function startFocus(i) {
+        const task = getDB('myTodos', [])[i];
         const now = new Date();
         const start = now.getHours() * 60 + now.getMinutes();
         const slots = getDB('studySlots', []);
-        slots.push({
-            start: start, 
-            end: Math.min(start + task.time, 1440), 
-            title: task.title, 
-            color: colors[Math.floor(Math.random() * colors.length)]
-        });
+        slots.push({ start: start, end: Math.min(start + task.time, 1440), title: task.title, color: colors[Math.floor(Math.random() * colors.length)] });
         setDB('studySlots', slots);
-        alert(`「${task.title}」を記録しました！`);
-    }
-
-    function renderHabits() {
-        const s = getDB('myTotalScore', 0);
-        document.getElementById('total-score').innerText = s + " pt";
-        const em = s >= 100 ? "🍙" : "🥚";
-        document.getElementById('char-emoji').innerText = em;
-        document.getElementById('room-char').innerText = em;
-    }
-    function addHabit(p) {
-        let s = getDB('myTotalScore', 0); s += p;
-        setDB('myTotalScore', s); renderHabits();
+        alert(`「${task.title}」を予定に記録しました！`);
     }
 </script>
 </body>
